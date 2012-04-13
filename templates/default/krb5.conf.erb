@@ -1,0 +1,39 @@
+# This file is managed by Chef! manual changes will be overriden
+
+<% krb_realm = node['kerberos']['realm'] %>
+
+[logging]
+ default = FILE:/var/log/krb5libs.log
+ kdc = FILE:/var/log/krb5kdc.log
+ admin_server = FILE:/var/log/kadmind.log
+
+[libdefaults]
+ default_realm = <%= krb_realm.upcase %>
+ dns_lookup_realm = false
+ dns_lookup_kdc = false
+ ticket_lifetime = 24h
+ forwardable = yes
+
+[realms]
+ <%= krb_realm.upcase %> = {
+	<% node['kerberos']['kdc_servers'].each do |server| %>
+  <%= "kdc = " + server + ":#{node['kerberos']['kdc_port']}" %>
+	<% end %>
+  <%= "admin_server = #{node['kerberos']['admin_server']}" + 
+		":#{node['kerberos']['admin_port']}" %>
+  default_domain = <%= krb_realm.downcase %> 
+ }
+
+[domain_realm]
+ <%= "." + krb_realm.downcase + " = " +  krb_realm.upcase %>
+ <%= krb_realm.downcase + " = " + krb_realm.upcase %>
+
+[appdefaults]
+  pam = {
+    debug = false
+    ticket_lifetime = 36000
+    renew_lifetime = 36000
+    forwardable = true
+    krb4_convert = false
+ }
+
